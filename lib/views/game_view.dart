@@ -3,28 +3,30 @@ import 'package:tic_tac_toe/views/home.dart';
 import 'package:tic_tac_toe/widgets/tic_tac_container.dart';
 
 class GameView extends StatefulWidget {
-  const GameView({super.key});
+  const GameView({Key? key}) : super(key: key);
+
   @override
   State<GameView> createState() => _GameViewState();
 }
 
 class _GameViewState extends State<GameView> {
-  List<List<String>> board = List.generate(3, (_) => List.filled(3, ""));
+  late List<List<String>> board;
   int currentPlayer = 0;
   String winner = "";
+
+  @override
+  void initState() {
+    board = List.generate(3, (_) => List.filled(3, ""));
+    super.initState();
+  }
 
   String controlTap(int row, int col) {
     if (board[row][col] != '') {
       return '';
     } else {
       setState(() {
-        if (currentPlayer == 0) {
-          board[row][col] = "X";
-          currentPlayer = 1;
-        } else {
-          board[row][col] = "O";
-          currentPlayer = 0;
-        }
+        board[row][col] = currentPlayer == 0 ? "X" : "O";
+        currentPlayer = 1 - currentPlayer;
         winner = checkWinner();
       });
       if (winner.isNotEmpty || board[row][col].isNotEmpty) return winner;
@@ -83,74 +85,70 @@ class _GameViewState extends State<GameView> {
           style: Theme.of(context).textTheme.headlineMedium,
         ),
       ),
-      body: Column(
-        children: [
-          GridView.builder(
-            padding: const EdgeInsets.all(16.0),
-            itemCount: 9,
-            gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
-              crossAxisCount: 3,
-              crossAxisSpacing: 10.0,
-              mainAxisSpacing: 10.0,
-            ),
-            itemBuilder: (BuildContext context, int index) {
-              final row = index ~/ 3;
-              final col = index % 3;
-              return GestureDetector(
-                onTap: () {
-                  var response = controlTap(row, col);
-                  if (response != '') {
-                    showDialog(
-                      barrierDismissible: false,
-                      context: context,
-                      builder: (context) {
-                        return Dialog(
-                          child: SizedBox(
-                            width: MediaQuery.of(context).size.width * 0.8,
-                            child: Column(
-                              mainAxisSize: MainAxisSize.min,
+      body: GridView.builder(
+        padding: const EdgeInsets.all(16.0),
+        itemCount: 9,
+        gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
+          crossAxisCount: 3,
+          crossAxisSpacing: 10.0,
+          mainAxisSpacing: 10.0,
+        ),
+        itemBuilder: (BuildContext context, int index) {
+          final row = index ~/ 3;
+          final col = index % 3;
+          return GestureDetector(
+            onTap: () {
+              var response = controlTap(row, col);
+              if (response != '') {
+                showDialog(
+                  barrierDismissible: false,
+                  context: context,
+                  builder: (context) {
+                    return Dialog(
+                      child: SizedBox(
+                        width: MediaQuery.of(context).size.width * 0.8,
+                        child: Column(
+                          mainAxisSize: MainAxisSize.min,
+                          children: [
+                            Text('Result: $response'),
+                            Row(
+                              mainAxisAlignment: MainAxisAlignment.center,
                               children: [
-                                Text('Result: $response'),
-                                Row(
-                                  mainAxisAlignment: MainAxisAlignment.center,
-                                  children: [
-                                    ElevatedButton(
-                                      onPressed: () {
-                                        setState(() {
-                                          currentPlayer = 0;
-                                          for (int i = 0; i < 3; i++) {
-                                            for (int j = 0; j < 3; j++) {
-                                              board[i][j] = '';
-                                            }
-                                          }
-                                        });
-                                        Navigator.of(context).pop();
-                                      },
-                                      child: const Text('Retry'),
-                                    ),
-                                    ElevatedButton(
-                                      onPressed: () {
-                                        Navigator.of(context).pushAndRemoveUntil(
-                                            MaterialPageRoute(builder: (context) => const HomePage()), (route) => false);
-                                      },
-                                      child: const Text('Home'),
-                                    ),
-                                  ],
+                                ElevatedButton(
+                                  onPressed: () {
+                                    setState(() {
+                                      currentPlayer = 0;
+                                      for (int i = 0; i < 3; i++) {
+                                        for (int j = 0; j < 3; j++) {
+                                          board[i][j] = '';
+                                        }
+                                      }
+                                    });
+                                    Navigator.of(context).pop();
+                                  },
+                                  child: const Text('Retry'),
+                                ),
+                                ElevatedButton(
+                                  onPressed: () {
+                                    Navigator.of(context).pushAndRemoveUntil(
+                                        MaterialPageRoute(builder: (context) => const HomePage()),
+                                        (route) => false);
+                                  },
+                                  child: const Text('Home'),
                                 ),
                               ],
                             ),
-                          ),
-                        );
-                      },
+                          ],
+                        ),
+                      ),
                     );
-                  }
-                },
-                child: TicTacToeContainer(value: board[row][col]),
-              );
+                  },
+                );
+              }
             },
-          ),
-          
-        ],
+            child: TicTacToeContainer(value: board[row][col]),
+          );
+        },
       ),
     );
   }
